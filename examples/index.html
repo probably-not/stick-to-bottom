@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StickToBottom Examples</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .header p {
+            margin: 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .examples {
+            padding: 40px;
+        }
+        
+        .example-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .example-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .example-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+        
+        .example-card h3 {
+            margin: 0 0 15px 0;
+            font-size: 1.5em;
+            color: #2c3e50;
+        }
+        
+        .example-card p {
+            margin: 0 0 25px 0;
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+        
+        .example-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .example-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .features {
+            margin-top: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .features h3 {
+            margin: 0 0 20px 0;
+            text-align: center;
+            color: #2c3e50;
+        }
+        
+        .features ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .features li {
+            padding: 10px 0;
+            color: #495057;
+            position: relative;
+            padding-left: 25px;
+        }
+        
+        .features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 600px) {
+            .example-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .header p {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>StickToBottom</h1>
+            <p>Interactive Examples & Demos</p>
+        </div>
+        
+        <div class="examples">
+            <div class="example-grid">
+                <div class="example-card">
+                    <h3>Basic Demo</h3>
+                    <p>Get started with the fundamental features. Add messages, scroll around, and see how the stick-to-bottom behavior works.</p>
+                    <a href="basic.html" class="example-link">View Basic Demo</a>
+                </div>
+                
+                <div class="example-card">
+                    <h3>Chat Application</h3>
+                    <p>A realistic chat interface with typing indicators, message bubbles, and smooth scrolling animations.</p>
+                    <a href="chat.html" class="example-link">View Chat Demo</a>
+                </div>
+                
+                <div class="example-card">
+                    <h3>Advanced Playground</h3>
+                    <p>Experiment with animation parameters, test different behaviors, and monitor real-time performance metrics.</p>
+                    <a href="advanced.html" class="example-link">View Advanced Demo</a>
+                </div>
+            </div>
+            
+            <div class="features">
+                <h3>Key Features</h3>
+                <ul>
+                    <li>Zero dependencies, lightweight</li>
+                    <li>Smooth spring-based animations</li>
+                    <li>Smart scroll detection</li>
+                    <li>Mobile-friendly touch support</li>
+                    <li>TypeScript definitions included</li>
+                    <li>Resize-aware content handling</li>
+                    <li>Customizable animation parameters</li>
+                    <li>Event-driven architecture</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Built with ❤️ | <a href="https://github.com/probably-not/stick-to-bottom">View on GitHub</a></p>
+        </div>
+    </div>
+</body>
+</html>

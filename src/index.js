@@ -630,3 +630,5 @@ if (typeof module !== 'undefined' && module.exports) {
 if (typeof window !== 'undefined') {
   window.StickToBottom = StickToBottom;
 }
+
+export default StickToBottom;

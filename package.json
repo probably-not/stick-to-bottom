@@ -1,0 +1,72 @@
+{
+  "name": "stick-to-bottom",
+  "version": "1.0.0",
+  "description": "A lightweight vanilla JavaScript library that automatically sticks to the bottom of a container and smoothly animates content while new items are added",
+  "main": "dist/stick-to-bottom.js",
+  "module": "dist/stick-to-bottom.esm.js",
+  "types": "dist/stick-to-bottom.d.ts",
+  "umd:main": "dist/stick-to-bottom.umd.js",
+  "unpkg": "dist/stick-to-bottom.umd.js",
+  "jsdelivr": "dist/stick-to-bottom.umd.js",
+  "exports": {
+    ".": {
+      "import": "./dist/stick-to-bottom.esm.js",
+      "require": "./dist/stick-to-bottom.js",
+      "types": "./dist/stick-to-bottom.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "build:watch": "rollup -c --watch",
+    "dev": "rollup -c --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "scroll",
+    "sticky",
+    "bottom",
+    "chat",
+    "messages",
+    "animation",
+    "smooth",
+    "auto-scroll",
+    "vanilla",
+    "javascript",
+    "typescript",
+    "ui",
+    "component",
+    "library"
+  ],
+  "author": "probably-not",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/probably-not/stick-to-bottom.git"
+  },
+  "bugs": {
+    "url": "https://github.com/probably-not/stick-to-bottom/issues"
+  },
+  "homepage": "https://github.com/probably-not/stick-to-bottom#readme",
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-terser": "^0.4.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "rollup": "^3.0.0",
+    "rollup-plugin-copy": "^3.4.0",
+    "typescript": "^5.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "sideEffects": false
+}

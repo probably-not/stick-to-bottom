@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic StickToBottom Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            position: relative;
+        }
+        
+        .messages {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .message {
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            max-width: 70%;
+        }
+        
+        .message.user {
+            background: #007bff;
+            color: white;
+            align-self: flex-end;
+            border-left: 4px solid #0056b3;
+        }
+        
+        .message.system {
+            background: #28a745;
+            color: white;
+            border-left: 4px solid #1e7e34;
+            font-style: italic;
+        }
+        
+        .scroll-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+        
+        .scroll-button:hover {
+            background: #0056b3;
+            transform: scale(1.1);
+        }
+        
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #ddd;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .input-group input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .input-group button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .input-group button:hover {
+            background: #0056b3;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .button-group button {
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .button-group button:hover {
+            background: #5a6268;
+        }
+        
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .status.at-bottom {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.escaped {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Basic StickToBottom Demo</h1>
+            <p>Try scrolling up and down, adding messages, and using the controls</p>
+        </div>
+        
+        <div class="chat-container" id="chat">
+            <div class="messages" id="messages">
+                <div class="message system">Welcome to the basic demo!</div>
+                <div class="message">This is a sample message</div>
+                <div class="message user">This is a user message</div>
+                <div class="message">Messages will automatically scroll to bottom</div>
+                <div class="message">Try scrolling up to see the behavior</div>
+            </div>
+            
+            <button class="scroll-button" id="scrollButton">↓</button>
+        </div>
+        
+        <div class="controls">
+            <div class="input-group">
+                <input type="text" id="messageInput" placeholder="Type a message and press Enter..." />
+                <button id="sendButton">Send</button>
+            </div>
+            
+            <div class="button-group">
+                <button id="addMessage">Add Message</button>
+                <button id="addBulk">Add 10 Messages</button>
+                <button id="scrollToBottom">Scroll to Bottom</button>
+                <button id="scrollInstant">Scroll Instant</button>
+                <button id="clearMessages">Clear Messages</button>
+            </div>
+            
+            <div class="status" id="status">
+                Status: Ready
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import StickToBottom from '../src/index.js';
+        
+        // Get DOM elements
+        const container = document.getElementById('chat');
+        const messages = document.getElementById('messages');
+        const scrollButton = document.getElementById('scrollButton');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const status = document.getElementById('status');
+        
+        // Initialize StickToBottom
+        const stickToBottom = new StickToBottom(container, messages, {
+            resize: 'smooth',
+            initial: 'smooth',
+            damping: 0.7,
+            stiffness: 0.05,
+            mass: 1.25
+        });
+        
+        // Message counter
+        let messageCount = 0;
+        
+        // Update status display
+        function updateStatus() {
+            const { isAtBottom, escapedFromLock, isNearBottom } = stickToBottom.state;
+            let statusText = 'Status: ';
+            let statusClass = '';
+            
+            if (isAtBottom) {
+                statusText += 'At Bottom';
+                statusClass = 'at-bottom';
+            } else if (escapedFromLock) {
+                statusText += 'Escaped (scrolled up)';
+                statusClass = 'escaped';
+            } else {
+                statusText += 'Not at bottom';
+            }
+            
+            if (isNearBottom) {
+                statusText += ' (Near bottom)';
+            }
+            
+            status.textContent = statusText;
+            status.className = `status ${statusClass}`;
+        }
+        
+        // Event listeners
+        stickToBottom.on('bottomChange', (isAtBottom) => {
+            scrollButton.style.display = isAtBottom ? 'none' : 'flex';
+            updateStatus();
+        });
+        
+        stickToBottom.on('escapeChange', (escapedFromLock) => {
+            updateStatus();
+        });
+        
+        stickToBottom.on('nearBottomChange', (isNearBottom) => {
+            updateStatus();
+        });
+        
+        // Add message function
+        function addMessage(text, type = 'normal') {
+            messageCount++;
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            messageEl.innerHTML = `
+                <div style="font-weight: bold; font-size: 12px; color: #666; margin-bottom: 4px;">
+                    Message #${messageCount} - ${new Date().toLocaleTimeString()}
+                </div>
+                ${text}
+            `;
+            messages.appendChild(messageEl);
+            return messageEl;
+        }
+        
+        // Input handling
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text) {
+                addMessage(text, 'user');
+                messageInput.value = '';
+                
+                // Simulate response after a delay
+                setTimeout(() => {
+                    addMessage(`Echo: ${text}`, 'system');
+                }, 500);
+            }
+        }
+        
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        sendButton.addEventListener('click', sendMessage);
+        
+        // Control buttons
+        document.getElementById('addMessage').addEventListener('click', () => {
+            addMessage('This is a test message');
+        });
+        
+        document.getElementById('addBulk').addEventListener('click', () => {
+            for (let i = 0; i < 10; i++) {
+                addMessage(`Bulk message ${i + 1} - Lorem ipsum dolor sit amet, consectetur adipiscing elit.`);
+            }
+        });
+        
+        document.getElementById('scrollToBottom').addEventListener('click', () => {
+            stickToBottom.scrollToBottom({ animation: 'smooth' });
+        });
+        
+        document.getElementById('scrollInstant').addEventListener('click', () => {
+            stickToBottom.scrollToBottom({ animation: 'instant' });
+        });
+        
+        document.getElementById('clearMessages').addEventListener('click', () => {
+            messages.innerHTML = '';
+            messageCount = 0;
+            addMessage('Messages cleared!', 'system');
+        });
+        
+        scrollButton.addEventListener('click', () => {
+            stickToBottom.scrollToBottom({ animation: 'smooth' });
+        });
+        
+        // Initial status update
+        updateStatus();
+        
+        // Auto-add messages for demo
+        setInterval(() => {
+            if (Math.random() > 0.7) {
+                const messages = [
+                    'System notification',
+                    'New update available',
+                    'Connection established',
+                    'Processing request...',
+                    'Task completed successfully'
+                ];
+                addMessage(messages[Math.floor(Math.random() * messages.length)], 'system');
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

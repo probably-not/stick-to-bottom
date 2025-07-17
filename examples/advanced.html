@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced StickToBottom Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .demo-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .demo-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .demo-header h3 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
+        
+        .demo-header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .chat-container {
+            height: 300px;
+            overflow-y: auto;
+            position: relative;
+            background: #f8f9fa;
+        }
+        
+        .messages {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .message {
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .message.user {
+            background: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+        
+        .message.bot {
+            background: #e9ecef;
+            color: #333;
+            align-self: flex-start;
+        }
+        
+        .message.system {
+            background: #d4edda;
+            color: #155724;
+            align-self: center;
+            font-size: 12px;
+            text-align: center;
+            max-width: 60%;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            align-self: center;
+            font-size: 12px;
+            text-align: center;
+            max-width: 60%;
+        }
+        
+        .scroll-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            font-size: 14px;
+        }
+        
+        .controls {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        .control-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .control-row input,
+        .control-row select {
+            padding: 6px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .control-row input[type="range"] {
+            flex: 1;
+            min-width: 100px;
+        }
+        
+        .control-row button {
+            padding: 6px 12px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        
+        .control-row button:hover {
+            background: #5a6268;
+        }
+        
+        .control-row button.primary {
+            background: #007bff;
+        }
+        
+        .control-row button.primary:hover {
+            background: #0056b3;
+        }
+        
+        .value-display {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+            min-width: 60px;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .status-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .status-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            transition: all 0.2s;
+        }
+        
+        .status-item.active {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .status-item.inactive {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .status-item h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #495057;
+        }
+        
+        .status-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .performance-chart {
+            margin-top: 20px;
+            height: 100px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-line {
+            position: absolute;
+            bottom: 0;
+            width: 2px;
+            background: #007bff;
+            transition: height 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Advanced StickToBottom Demo</h1>
+            <p>Explore different animation settings and behaviors</p>
+        </div>
+        
+        <div class="demo-grid">
+            <!-- Demo 1: Animation Playground -->
+            <div class="demo-panel">
+                <div class="demo-header">
+                    <h3>Animation Playground</h3>
+                    <p>Adjust spring physics parameters</p>
+                </div>
+                
+                <div class="chat-container" id="chat1">
+                    <div class="messages" id="messages1"></div>
+                    <button class="scroll-button" id="scrollButton1">↓</button>
+                </div>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Damping (0-1)</label>
+                        <div class="control-row">
+                            <input type="range" id="damping1" min="0" max="1" step="0.1" value="0.7">
+                            <span class="value-display" id="dampingValue1">0.7</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Stiffness (0-0.2)</label>
+                        <div class="control-row">
+                            <input type="range" id="stiffness1" min="0" max="0.2" step="0.01" value="0.05">
+                            <span class="value-display" id="stiffnessValue1">0.05</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Mass (0.5-3)</label>
+                        <div class="control-row">
+                            <input type="range" id="mass1" min="0.5" max="3" step="0.1" value="1.25">
+                            <span class="value-display" id="massValue1">1.25</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="control-row">
+                            <button id="addMessage1">Add Message</button>
+                            <button id="testScroll1" class="primary">Test Scroll</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Demo 2: Behavior Testing -->
+            <div class="demo-panel">
+                <div class="demo-header">
+                    <h3>Behavior Testing</h3>
+                    <p>Test different scroll behaviors</p>
+                </div>
+                
+                <div class="chat-container" id="chat2">
+                    <div class="messages" id="messages2"></div>
+                    <button class="scroll-button" id="scrollButton2">↓</button>
+                </div>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Animation Type</label>
+                        <div class="control-row">
+                            <select id="animationType2">
+                                <option value="smooth">Smooth</option>
+                                <option value="instant">Instant</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                            <button id="scrollTest2" class="primary">Scroll</button>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Message Generation</label>
+                        <div class="control-row">
+                            <button id="addSingle2">Add 1</button>
+                            <button id="addBulk2">Add 10</button>
+                            <button id="addStream2">Stream</button>
+                            <button id="clearMessages2">Clear</button>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Special Tests</label>
+                        <div class="control-row">
+                            <button id="testResize2">Resize Test</button>
+                            <button id="testEscape2">Escape Test</button>
+                            <button id="testDynamic2">Dynamic Content</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status Panel -->
+        <div class="status-panel">
+            <h3 style="margin-bottom: 20px; text-align: center;">Real-time Status</h3>
+            
+            <div class="status-grid">
+                <div class="status-item" id="statusBottom">
+                    <h4>At Bottom</h4>
+                    <div class="status-value" id="bottomValue">-</div>
+                </div>
+                
+                <div class="status-item" id="statusEscaped">
+                    <h4>Escaped</h4>
+                    <div class="status-value" id="escapedValue">-</div>
+                </div>
+                
+                <div class="status-item" id="statusNear">
+                    <h4>Near Bottom</h4>
+                    <div class="status-value" id="nearValue">-</div>
+                </div>
+                
+                <div class="status-item" id="statusScroll">
+                    <h4>Scroll Position</h4>
+                    <div class="status-value" id="scrollValue">-</div>
+                </div>
+                
+                <div class="status-item" id="statusTarget">
+                    <h4>Target Position</h4>
+                    <div class="status-value" id="targetValue">-</div>
+                </div>
+                
+                <div class="status-item" id="statusDiff">
+                    <h4>Difference</h4>
+                    <div class="status-value" id="diffValue">-</div>
+                </div>
+            </div>
+            
+            <div class="performance-chart" id="performanceChart"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import StickToBottom from '../src/index.js';
+        
+        // Initialize both demos
+        const stickToBottom1 = new StickToBottom(
+            document.getElementById('chat1'),
+            document.getElementById('messages1'),
+            { resize: 'smooth', initial: 'smooth' }
+        );
+        
+        const stickToBottom2 = new StickToBottom(
+            document.getElementById('chat2'),
+            document.getElementById('messages2'),
+            { resize: 'smooth', initial: 'smooth' }
+        );
+        
+        // Message counters
+        let messageCount1 = 0;
+        let messageCount2 = 0;
+        
+        // Performance tracking
+        let performanceData = [];
+        
+        // Demo 1: Animation Playground
+        const damping1 = document.getElementById('damping1');
+        const stiffness1 = document.getElementById('stiffness1');
+        const mass1 = document.getElementById('mass1');
+        const dampingValue1 = document.getElementById('dampingValue1');
+        const stiffnessValue1 = document.getElementById('stiffnessValue1');
+        const massValue1 = document.getElementById('massValue1');
+        
+        function updateAnimationSettings() {
+            const damping = parseFloat(damping1.value);
+            const stiffness = parseFloat(stiffness1.value);
+            const mass = parseFloat(mass1.value);
+            
+            stickToBottom1.options.damping = damping;
+            stickToBottom1.options.stiffness = stiffness;
+            stickToBottom1.options.mass = mass;
+            
+            dampingValue1.textContent = damping.toFixed(1);
+            stiffnessValue1.textContent = stiffness.toFixed(2);
+            massValue1.textContent = mass.toFixed(1);
+        }
+        
+        damping1.addEventListener('input', updateAnimationSettings);
+        stiffness1.addEventListener('input', updateAnimationSettings);
+        mass1.addEventListener('input', updateAnimationSettings);
+        
+        function addMessage(container, count, type = 'user') {
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            messageEl.textContent = `Message ${count} - ${new Date().toLocaleTimeString()}`;
+            container.appendChild(messageEl);
+            return messageEl;
+        }
+        
+        document.getElementById('addMessage1').addEventListener('click', () => {
+            addMessage(document.getElementById('messages1'), ++messageCount1);
+        });
+        
+        document.getElementById('testScroll1').addEventListener('click', () => {
+            stickToBottom1.scrollToBottom({
+                animation: {
+                    damping: parseFloat(damping1.value),
+                    stiffness: parseFloat(stiffness1.value),
+                    mass: parseFloat(mass1.value)
+                }
+            });
+        });
+        
+        // Demo 2: Behavior Testing
+        const animationType2 = document.getElementById('animationType2');
+        
+        document.getElementById('scrollTest2').addEventListener('click', () => {
+            let animation = animationType2.value;
+            if (animation === 'custom') {
+                animation = { damping: 0.9, stiffness: 0.02, mass: 2.0 };
+            }
+            stickToBottom2.scrollToBottom({ animation });
+        });
+        
+        document.getElementById('addSingle2').addEventListener('click', () => {
+            addMessage(document.getElementById('messages2'), ++messageCount2, 'bot');
+        });
+        
+        document.getElementById('addBulk2').addEventListener('click', () => {
+            for (let i = 0; i < 10; i++) {
+                addMessage(document.getElementById('messages2'), ++messageCount2, i % 2 === 0 ? 'user' : 'bot');
+            }
+        });
+        
+        let streamInterval;
+        document.getElementById('addStream2').addEventListener('click', () => {
+            if (streamInterval) {
+                clearInterval(streamInterval);
+                streamInterval = null;
+                document.getElementById('addStream2').textContent = 'Stream';
+            } else {
+                streamInterval = setInterval(() => {
+                    addMessage(document.getElementById('messages2'), ++messageCount2, 'system');
+                }, 500);
+                document.getElementById('addStream2').textContent = 'Stop';
+            }
+        });
+        
+        document.getElementById('clearMessages2').addEventListener('click', () => {
+            document.getElementById('messages2').innerHTML = '';
+            messageCount2 = 0;
+            addMessage(document.getElementById('messages2'), ++messageCount2, 'system');
+        });
+        
+        document.getElementById('testResize2').addEventListener('click', () => {
+            const messages = document.getElementById('messages2');
+            const currentHeight = messages.style.minHeight || 'auto';
+            messages.style.minHeight = currentHeight === 'auto' ? '500px' : 'auto';
+        });
+        
+        document.getElementById('testEscape2').addEventListener('click', () => {
+            const chat = document.getElementById('chat2');
+            chat.scrollTop = chat.scrollTop - 100;
+        });
+        
+        document.getElementById('testDynamic2').addEventListener('click', () => {
+            const messageEl = addMessage(document.getElementById('messages2'), ++messageCount2, 'user');
+            messageEl.style.height = '20px';
+            messageEl.style.overflow = 'hidden';
+            messageEl.style.transition = 'height 2s ease';
+            
+            setTimeout(() => {
+                messageEl.style.height = '80px';
+                messageEl.textContent += ' - This message is expanding to test dynamic content resizing!';
+            }, 1000);
+        });
+        
+        // Scroll buttons
+        document.getElementById('scrollButton1').addEventListener('click', () => {
+            stickToBottom1.scrollToBottom({ animation: 'smooth' });
+        });
+        
+        document.getElementById('scrollButton2').addEventListener('click', () => {
+            stickToBottom2.scrollToBottom({ animation: 'smooth' });
+        });
+        
+        // Status monitoring
+        function updateStatus() {
+            const state1 = stickToBottom1.state;
+            const state2 = stickToBottom2.state;
+            
+            // Use demo 1 for primary status
+            const state = state1;
+            
+            document.getElementById('bottomValue').textContent = state.isAtBottom ? 'YES' : 'NO';
+            document.getElementById('escapedValue').textContent = state.escapedFromLock ? 'YES' : 'NO';
+            document.getElementById('nearValue').textContent = state.isNearBottom ? 'YES' : 'NO';
+            document.getElementById('scrollValue').textContent = Math.round(state.scrollTop);
+            document.getElementById('targetValue').textContent = Math.round(state.targetScrollTop);
+            document.getElementById('diffValue').textContent = Math.round(stickToBottom1.scrollDifference);
+            
+            // Update status item classes
+            document.getElementById('statusBottom').className = `status-item ${state.isAtBottom ? 'active' : 'inactive'}`;
+            document.getElementById('statusEscaped').className = `status-item ${state.escapedFromLock ? 'active' : 'inactive'}`;
+            document.getElementById('statusNear').className = `status-item ${state.isNearBottom ? 'active' : 'inactive'}`;
+            
+            // Update performance chart
+            performanceData.push({
+                scrollTop: state.scrollTop,
+                targetScrollTop: state.targetScrollTop,
+                timestamp: Date.now()
+            });
+            
+            if (performanceData.length > 50) {
+                performanceData.shift();
+            }
+            
+            updatePerformanceChart();
+        }
+        
+        function updatePerformanceChart() {
+            const chart = document.getElementById('performanceChart');
+            chart.innerHTML = '';
+            
+            if (performanceData.length < 2) return;
+            
+            const maxHeight = 100;
+            const width = chart.offsetWidth;
+            const barWidth = width / performanceData.length;
+            
+            const maxValue = Math.max(...performanceData.map(d => d.targetScrollTop));
+            const minValue = Math.min(...performanceData.map(d => Math.min(d.scrollTop, d.targetScrollTop)));
+            const range = maxValue - minValue || 1;
+            
+            performanceData.forEach((data, index) => {
+                const scrollBar = document.createElement('div');
+                scrollBar.className = 'chart-line';
+                scrollBar.style.left = `${index * barWidth}px`;
+                scrollBar.style.width = `${Math.max(barWidth - 1, 1)}px`;
+                scrollBar.style.height = `${((data.scrollTop - minValue) / range) * maxHeight}px`;
+                scrollBar.style.background = '#007bff';
+                chart.appendChild(scrollBar);
+                
+                const targetBar = document.createElement('div');
+                targetBar.className = 'chart-line';
+                targetBar.style.left = `${index * barWidth}px`;
+                targetBar.style.width = `${Math.max(barWidth - 1, 1)}px`;
+                targetBar.style.height = `${((data.targetScrollTop - minValue) / range) * maxHeight}px`;
+                targetBar.style.background = '#28a745';
+                targetBar.style.opacity = '0.7';
+                chart.appendChild(targetBar);
+            });
+        }
+        
+        // Event listeners for status updates
+        [stickToBottom1, stickToBottom2].forEach(stb => {
+            stb.on('stateChange', updateStatus);
+            stb.on('bottomChange', (isAtBottom) => {
+                const scrollButton = stb === stickToBottom1 ? 
+                    document.getElementById('scrollButton1') : 
+                    document.getElementById('scrollButton2');
+                scrollButton.style.display = isAtBottom ? 'none' : 'flex';
+            });
+        });
+        
+        // Initialize
+        updateStatus();
+        updateAnimationSettings();
+        
+        // Add initial messages
+        addMessage(document.getElementById('messages1'), ++messageCount1, 'system');
+        addMessage(document.getElementById('messages2'), ++messageCount2, 'system');
+        
+        // Update status periodically
+        setInterval(updateStatus, 100);
+    </script>
+</body>
+</html>

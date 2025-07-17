@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Application Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .chat-app {
+            width: 100%;
+            max-width: 500px;
+            height: 80vh;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .chat-info h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .chat-info p {
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            background: #f8f9fa;
+        }
+        
+        .messages-content {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 100%;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+            animation: messageSlide 0.3s ease-out;
+        }
+        
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message.incoming {
+            background: #e9ecef;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message.outgoing {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message.system {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            align-self: center;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 12px;
+            max-width: 60%;
+            text-align: center;
+        }
+        
+        .message-time {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #e9ecef;
+            border-radius: 18px;
+            max-width: 80px;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #6c757d;
+            animation: typingPulse 1.5s infinite;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typingPulse {
+            0%, 60%, 100% {
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+            30% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .scroll-to-bottom {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s;
+            font-size: 18px;
+        }
+        
+        .scroll-to-bottom:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .chat-input {
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        
+        .message-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e9ecef;
+            border-radius: 24px;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            transition: all 0.2s;
+            font-family: inherit;
+            max-height: 120px;
+        }
+        
+        .message-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+        
+        .send-button {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 18px;
+        }
+        
+        .send-button:hover {
+            transform: scale(1.05);
+        }
+        
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status-bar {
+            padding: 4px 16px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            font-size: 11px;
+            color: #6c757d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #28a745;
+            margin-right: 6px;
+        }
+        
+        .status-indicator.away {
+            background: #ffc107;
+        }
+        
+        .status-indicator.offline {
+            background: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-app">
+        <div class="chat-header">
+            <div class="avatar">AI</div>
+            <div class="chat-info">
+                <h3>AI Assistant</h3>
+                <p><span class="status-indicator" id="statusIndicator"></span>Online</p>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="messages-content" id="messagesContent">
+                <div class="message system">Chat started</div>
+                <div class="message incoming">
+                    <div>Hello! I'm your AI assistant. How can I help you today?</div>
+                    <div class="message-time">12:00 PM</div>
+                </div>
+            </div>
+            
+            <button class="scroll-to-bottom" id="scrollToBottom">↓</button>
+        </div>
+        
+        <div class="chat-input">
+            <div class="input-wrapper">
+                <textarea 
+                    class="message-input" 
+                    id="messageInput" 
+                    placeholder="Type your message..."
+                    rows="1"
+                ></textarea>
+            </div>
+            <button class="send-button" id="sendButton">→</button>
+        </div>
+        
+        <div class="status-bar">
+            <span id="statusText">Ready</span>
+            <span id="messageCount">2 messages</span>
+        </div>
+    </div>
+
+    <script type="module">
+        import StickToBottom from '../src/index.js';
+        
+        // Get DOM elements
+        const chatMessages = document.getElementById('chatMessages');
+        const messagesContent = document.getElementById('messagesContent');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const scrollToBottom = document.getElementById('scrollToBottom');
+        const statusText = document.getElementById('statusText');
+        const messageCount = document.getElementById('messageCount');
+        const statusIndicator = document.getElementById('statusIndicator');
+        
+        // Initialize StickToBottom
+        const stickToBottom = new StickToBottom(chatMessages, messagesContent, {
+            resize: 'smooth',
+            initial: 'smooth',
+            damping: 0.8,
+            stiffness: 0.06,
+            mass: 1.0
+        });
+        
+        // State
+        let messageCounter = 2;
+        let typingTimeout;
+        let isTyping = false;
+        
+        // Auto-resize textarea
+        messageInput.addEventListener('input', () => {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = messageInput.scrollHeight + 'px';
+        });
+        
+        // Update status
+        function updateStatus() {
+            const { isAtBottom, escapedFromLock } = stickToBottom.state;
+            
+            if (isAtBottom) {
+                statusText.textContent = 'At bottom';
+                statusIndicator.className = 'status-indicator';
+            } else if (escapedFromLock) {
+                statusText.textContent = 'Scrolled up';
+                statusIndicator.className = 'status-indicator away';
+            } else {
+                statusText.textContent = 'Not at bottom';
+                statusIndicator.className = 'status-indicator offline';
+            }
+            
+            messageCount.textContent = `${messageCounter} messages`;
+        }
+        
+        // Event listeners
+        stickToBottom.on('bottomChange', (isAtBottom) => {
+            scrollToBottom.style.display = isAtBottom ? 'none' : 'flex';
+            updateStatus();
+        });
+        
+        stickToBottom.on('escapeChange', updateStatus);
+        
+        // Add message function
+        function addMessage(text, type = 'outgoing', time = null) {
+            messageCounter++;
+            
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            
+            const timeStr = time || new Date().toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            messageEl.innerHTML = `
+                <div>${text}</div>
+                <div class="message-time">${timeStr}</div>
+            `;
+            
+            messagesContent.appendChild(messageEl);
+            updateStatus();
+            
+            return messageEl;
+        }
+        
+        // Show typing indicator
+        function showTypingIndicator() {
+            if (isTyping) return;
+            
+            isTyping = true;
+            const typingEl = document.createElement('div');
+            typingEl.className = 'typing-indicator';
+            typingEl.id = 'typingIndicator';
+            typingEl.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            
+            messagesContent.appendChild(typingEl);
+        }
+        
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            if (!isTyping) return;
+            
+            isTyping = false;
+            const typingEl = document.getElementById('typingIndicator');
+            if (typingEl) {
+                typingEl.remove();
+            }
+        }
+        
+        // Simulate AI response
+        function simulateAIResponse(userMessage) {
+            showTypingIndicator();
+            
+            // Simulate thinking time
+            setTimeout(() => {
+                hideTypingIndicator();
+                
+                // Simple responses
+                const responses = [
+                    "That's interesting! Tell me more.",
+                    "I understand. How can I help with that?",
+                    "Thanks for sharing that with me.",
+                    "I see. Would you like me to elaborate on anything?",
+                    "That's a great question! Let me think about that.",
+                    "I'm here to help. What would you like to know?",
+                    "Interesting perspective! What made you think of that?",
+                    "I appreciate you asking. Here's what I think...",
+                ];
+                
+                let response;
+                if (userMessage.toLowerCase().includes('hello') || userMessage.toLowerCase().includes('hi')) {
+                    response = "Hello! Great to meet you. How's your day going?";
+                } else if (userMessage.toLowerCase().includes('help')) {
+                    response = "I'm here to help! What specific topic would you like assistance with?";
+                } else if (userMessage.toLowerCase().includes('time')) {
+                    response = `The current time is ${new Date().toLocaleTimeString()}.`;
+                } else {
+                    response = responses[Math.floor(Math.random() * responses.length)];
+                }
+                
+                addMessage(response, 'incoming');
+            }, 1000 + Math.random() * 2000);
+        }
+        
+        // Send message
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+            
+            // Add user message
+            addMessage(text, 'outgoing');
+            
+            // Clear input
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            
+            // Simulate AI response
+            simulateAIResponse(text);
+        }
+        
+        // Input handling
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        sendButton.addEventListener('click', sendMessage);
+        
+        // Scroll to bottom button
+        scrollToBottom.addEventListener('click', () => {
+            stickToBottom.scrollToBottom({ animation: 'smooth' });
+        });
+        
+        // Initial update
+        updateStatus();
+        
+        // Demo: Add some system messages periodically
+        setInterval(() => {
+            if (Math.random() > 0.85) {
+                const systemMessages = [
+                    'User is typing...',
+                    'Connection stable',
+                    'Message delivered',
+                    'New features available'
+                ];
+                
+                const message = systemMessages[Math.floor(Math.random() * systemMessages.length)];
+                addMessage(message, 'system');
+            }
+        }, 5000);
+        
+        // Focus input on load
+        messageInput.focus();
+    </script>
+</body>
+</html>
