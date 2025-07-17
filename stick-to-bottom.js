@@ -1,6 +1,10 @@
 /**
  * Vanilla JavaScript implementation of StickToBottom
  * Ported from React useStickToBottom hook
+ * 
+ * This class provides stick-to-bottom behavior for scrollable containers,
+ * automatically scrolling to the bottom when new content is added while
+ * preserving user scroll position when they scroll up.
  */
 
 // Constants
@@ -84,6 +88,11 @@ function mergeAnimations(...animations) {
 
 /**
  * StickToBottom class - Vanilla JavaScript implementation
+ * 
+ * @class StickToBottom
+ * @param {HTMLElement} scrollElement - The scrollable container element
+ * @param {HTMLElement} contentElement - The content element to observe for size changes
+ * @param {Object} options - Configuration options
  */
 class StickToBottom {
   constructor(scrollElement, contentElement, options = {}) {
@@ -156,6 +165,12 @@ class StickToBottom {
 
   get targetScrollTop() {
     if (!this.scrollElement || !this.contentElement) {
+      if (!this.scrollElement) {
+        console.warn('StickToBottom: scrollElement not set');
+      }
+      if (!this.contentElement) {
+        console.warn('StickToBottom: contentElement not set');
+      }
       return 0;
     }
 
@@ -166,6 +181,12 @@ class StickToBottom {
 
   get calculatedTargetScrollTop() {
     if (!this.scrollElement || !this.contentElement) {
+      if (!this.scrollElement) {
+        console.warn('StickToBottom: scrollElement not set');
+      }
+      if (!this.contentElement) {
+        console.warn('StickToBottom: contentElement not set');
+      }
       return 0;
     }
 
@@ -235,7 +256,10 @@ class StickToBottom {
     }
   }
 
-  // Selection detection method
+  /**
+   * Detects if the user is currently selecting text within the scroll container
+   * @returns {boolean} - True if user is selecting text
+   */
   isSelecting() {
     if (!mouseDown) {
       return false;
@@ -253,7 +277,16 @@ class StickToBottom {
     );
   }
 
-  // Main scrollToBottom method
+  /**
+   * Scrolls to the bottom of the container with animation
+   * @param {Object|string} scrollOptions - Scroll options or animation type
+   * @param {string|Object} scrollOptions.animation - Animation configuration
+   * @param {number} scrollOptions.wait - Wait time before scrolling
+   * @param {number|Promise} scrollOptions.duration - Animation duration
+   * @param {boolean} scrollOptions.preserveScrollPosition - Whether to preserve scroll position
+   * @param {boolean} scrollOptions.ignoreEscapes - Whether to ignore escape detection
+   * @returns {Promise<boolean>} - Resolves when scroll completes
+   */
   scrollToBottom(scrollOptions = {}) {
     if (typeof scrollOptions === "string") {
       scrollOptions = { animation: scrollOptions };
@@ -513,7 +546,10 @@ class StickToBottom {
     this.state.resizeObserver?.observe(this.contentElement);
   }
 
-  // Element setters
+  /**
+   * Sets the scroll element and updates event listeners
+   * @param {HTMLElement} element - The new scroll element
+   */
   setScrollElement(element) {
     // Remove old listeners
     if (this.scrollElement) {
@@ -531,6 +567,10 @@ class StickToBottom {
     }
   }
 
+  /**
+   * Sets the content element and updates resize observer
+   * @param {HTMLElement} element - The new content element
+   */
   setContentElement(element) {
     // Disconnect old observer
     this.state.resizeObserver?.disconnect();
@@ -542,7 +582,10 @@ class StickToBottom {
     this.setupResizeObserver();
   }
 
-  // Initialization
+  /**
+   * Initializes the StickToBottom instance
+   * Sets up event listeners and resize observer
+   */
   init() {
     // Setup event listeners
     if (this.scrollElement) {
@@ -559,7 +602,10 @@ class StickToBottom {
     }
   }
 
-  // Cleanup
+  /**
+   * Destroys the StickToBottom instance
+   * Removes all event listeners and cleans up resources
+   */
   destroy() {
     // Remove event listeners
     this.scrollElement?.removeEventListener('scroll', this.handleScroll);
