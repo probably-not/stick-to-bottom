@@ -1,5 +1,7 @@
 # stick-to-bottom
 
+**DISCLAIMER: THIS LIBRARY WAS 100% VIBE CODED BY CLAUDE CODE SONNET.**
+
 [![npm version](https://img.shields.io/npm/v/stick-to-bottom.svg?style=flat-square)](https://www.npmjs.com/package/stick-to-bottom)
 [![npm downloads](https://img.shields.io/npm/dm/stick-to-bottom.svg?style=flat-square)](https://www.npmjs.com/package/stick-to-bottom)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
