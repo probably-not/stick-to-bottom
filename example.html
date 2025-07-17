@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StickToBottom Vanilla JS Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            position: relative;
+            border: 1px solid #ddd;
+        }
+
+        .messages-content {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .message.bot {
+            background: #e9ecef;
+            color: #333;
+            align-self: flex-start;
+        }
+
+        .controls {
+            padding: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .scroll-button {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .scroll-button:hover {
+            background: #218838;
+        }
+
+        .status {
+            padding: 10px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .status-item {
+            margin: 2px 0;
+        }
+
+        .status-true {
+            color: #28a745;
+        }
+
+        .status-false {
+            color: #dc3545;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .animation-controls {
+            margin-top: 10px;
+        }
+
+        select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>StickToBottom Vanilla JS Demo</h1>
+            <p>A vanilla JavaScript implementation of the React useStickToBottom hook</p>
+        </div>
+
+        <div class="chat-container" id="chat-container">
+            <div class="messages-content" id="messages-content">
+                <div class="message bot">Welcome to the StickToBottom demo!</div>
+                <div class="message bot">Try adding messages and scrolling around to see the behavior.</div>
+                <div class="message user">Hello! This looks great.</div>
+                <div class="message bot">The container will automatically stick to the bottom as new messages are added.</div>
+                <div class="message bot">But if you scroll up, it will respect your position and not auto-scroll.</div>
+            </div>
+
+            <button class="scroll-button" id="scroll-button">↓</button>
+        </div>
+
+        <div class="controls">
+            <input type="text" id="message-input" placeholder="Type a message..." />
+            <button onclick="addMessage()">Add Message</button>
+            <button onclick="addLongMessage()">Add Long Message</button>
+            <button onclick="addMultipleMessages()">Add Multiple</button>
+            <button onclick="clearMessages()">Clear</button>
+        </div>
+
+        <div class="animation-controls">
+            <label for="animation-select">Animation:</label>
+            <select id="animation-select">
+                <option value="smooth">Smooth (Spring)</option>
+                <option value="instant">Instant</option>
+            </select>
+            <button onclick="manualScrollToBottom()">Manual Scroll to Bottom</button>
+        </div>
+
+        <div class="status">
+            <div class="status-item">
+                <strong>Status:</strong>
+                <span id="is-at-bottom">Loading...</span> |
+                <span id="escaped-from-lock">Loading...</span> |
+                <span id="is-near-bottom">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="stick-to-bottom.js"></script>
+    <script>
+        // Message functions
+        let messageCount = 0;
+        let stickToBottom = null;
+        let content = null;
+
+        // Initialize after DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize StickToBottom
+            const container = document.getElementById('chat-container');
+            content = document.getElementById('messages-content');
+            const scrollButton = document.getElementById('scroll-button');
+
+            stickToBottom = new StickToBottom(container, content, {
+                resize: 'smooth',
+                initial: 'smooth',
+                damping: 0.7,
+                stiffness: 0.05,
+                mass: 1.25
+            });
+
+            // Update status display
+            function updateStatus() {
+                if (!stickToBottom) return;
+                
+                document.getElementById('is-at-bottom').textContent = `At Bottom: ${stickToBottom.state.isAtBottom}`;
+                document.getElementById('is-at-bottom').className = stickToBottom.state.isAtBottom ? 'status-true' : 'status-false';
+                
+                document.getElementById('escaped-from-lock').textContent = `Escaped: ${stickToBottom.state.escapedFromLock}`;
+                document.getElementById('escaped-from-lock').className = stickToBottom.state.escapedFromLock ? 'status-true' : 'status-false';
+                
+                document.getElementById('is-near-bottom').textContent = `Near Bottom: ${stickToBottom.state.isNearBottom}`;
+                document.getElementById('is-near-bottom').className = stickToBottom.state.isNearBottom ? 'status-true' : 'status-false';
+            }
+
+            // Listen to state changes
+            stickToBottom.on('bottomChange', (isAtBottom) => {
+                scrollButton.style.display = isAtBottom ? 'none' : 'block';
+                updateStatus();
+            });
+
+            stickToBottom.on('escapeChange', updateStatus);
+            stickToBottom.on('nearBottomChange', updateStatus);
+
+            // Initial status update
+            updateStatus();
+
+            // Scroll button click handler
+            scrollButton.onclick = () => {
+                if (!stickToBottom) return;
+                const animation = document.getElementById('animation-select').value;
+                stickToBottom.scrollToBottom({ animation });
+            };
+        });
+
+        function addMessage() {
+            if (!content) return;
+            
+            const input = document.getElementById('message-input');
+            const text = input.value.trim() || `Message ${++messageCount}`;
+            
+            const message = document.createElement('div');
+            message.className = 'message user';
+            message.textContent = text;
+            
+            content.appendChild(message);
+            
+            // Add bot response after a short delay
+            setTimeout(() => {
+                const botMessage = document.createElement('div');
+                botMessage.className = 'message bot';
+                botMessage.textContent = `Bot response to: "${text}"`;
+                content.appendChild(botMessage);
+            }, 500);
+            
+            input.value = '';
+        }
+
+        function addLongMessage() {
+            if (!content) return;
+            
+            const message = document.createElement('div');
+            message.className = 'message bot';
+            message.textContent = `Long message ${++messageCount}: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`;
+            content.appendChild(message);
+        }
+
+        function addMultipleMessages() {
+            if (!content) return;
+            
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    if (!content) return;
+                    const message = document.createElement('div');
+                    message.className = Math.random() > 0.5 ? 'message user' : 'message bot';
+                    message.textContent = `Batch message ${++messageCount}`;
+                    content.appendChild(message);
+                }, i * 200);
+            }
+        }
+
+        function clearMessages() {
+            if (!content) return;
+            
+            content.innerHTML = '';
+            messageCount = 0;
+        }
+
+        function manualScrollToBottom() {
+            if (!stickToBottom) return;
+            const animation = document.getElementById('animation-select').value;
+            stickToBottom.scrollToBottom({ animation });
+        }
+
+        // Handle Enter key in message input
+        document.getElementById('message-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addMessage();
+            }
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (stickToBottom) {
+                stickToBottom.destroy();
+            }
+        });
+    </script>
+</body>
+</html>
