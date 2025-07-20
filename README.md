@@ -2,8 +2,8 @@
 
 **DISCLAIMER: THIS LIBRARY WAS 100% VIBE CODED BY CLAUDE CODE SONNET.**
 
-[![npm version](https://img.shields.io/npm/v/stick-to-bottom.svg?style=flat-square)](https://www.npmjs.com/package/stick-to-bottom)
-[![npm downloads](https://img.shields.io/npm/dm/stick-to-bottom.svg?style=flat-square)](https://www.npmjs.com/package/stick-to-bottom)
+[![npm version](https://img.shields.io/npm/v/@probably-not/stick-to-bottom.svg?style=flat-square)](https://www.npmjs.com/package/@probably-not/stick-to-bottom)
+[![npm downloads](https://img.shields.io/npm/dm/@probably-not/stick-to-bottom.svg?style=flat-square)](https://www.npmjs.com/package/@probably-not/stick-to-bottom)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A lightweight **zero-dependency** vanilla JavaScript library that automatically sticks to the bottom of a container and smoothly animates content while new items are added. Perfect for chat applications, live logs, and any streaming content interface.
@@ -23,15 +23,15 @@ A lightweight **zero-dependency** vanilla JavaScript library that automatically 
 ## 🚀 Installation
 
 ```bash
-npm install stick-to-bottom
+npm install @probably-not/stick-to-bottom
 ```
 
 ```bash
-yarn add stick-to-bottom
+yarn add @probably-not/stick-to-bottom
 ```
 
 ```bash
-pnpm add stick-to-bottom
+pnpm add @probably-not/stick-to-bottom
 ```
 
 ## 📖 Usage
@@ -39,7 +39,7 @@ pnpm add stick-to-bottom
 ### Basic Usage
 
 ```javascript
-import StickToBottom from 'stick-to-bottom';
+import StickToBottom from '@probably-not/stick-to-bottom';
 
 // Get your container and content elements
 const container = document.querySelector('.chat-container');
@@ -120,162 +120,6 @@ stickToBottom.scrollToBottom().then((success) => {
     console.log('Scroll was cancelled');
   }
 });
-```
-
-## 🎯 Real-World Examples
-
-### Chat Application
-
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    .chat-container {
-      height: 400px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      padding: 10px;
-    }
-    
-    .message {
-      margin-bottom: 10px;
-      padding: 8px;
-      background: #f0f0f0;
-      border-radius: 4px;
-    }
-    
-    .scroll-button {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      cursor: pointer;
-      display: none;
-    }
-  </style>
-</head>
-<body>
-  <div class="chat-container" id="chat">
-    <div class="messages" id="messages">
-      <!-- Messages will be added here -->
-    </div>
-  </div>
-  
-  <button class="scroll-button" id="scrollButton">↓</button>
-  <input type="text" id="messageInput" placeholder="Type a message..." />
-  
-  <script type="module">
-    import StickToBottom from './dist/stick-to-bottom.esm.js';
-    
-    const container = document.getElementById('chat');
-    const messages = document.getElementById('messages');
-    const scrollButton = document.getElementById('scrollButton');
-    const input = document.getElementById('messageInput');
-    
-    // Initialize StickToBottom
-    const stickToBottom = new StickToBottom(container, messages, {
-      resize: 'smooth',
-      initial: 'smooth'
-    });
-    
-    // Show/hide scroll button based on position
-    stickToBottom.on('bottomChange', (isAtBottom) => {
-      scrollButton.style.display = isAtBottom ? 'none' : 'block';
-    });
-    
-    // Scroll to bottom when button clicked
-    scrollButton.addEventListener('click', () => {
-      stickToBottom.scrollToBottom({ animation: 'smooth' });
-    });
-    
-    // Add message function
-    function addMessage(text) {
-      const messageEl = document.createElement('div');
-      messageEl.className = 'message';
-      messageEl.textContent = text;
-      messages.appendChild(messageEl);
-    }
-    
-    // Handle input
-    input.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && input.value.trim()) {
-        addMessage(input.value);
-        input.value = '';
-      }
-    });
-    
-    // Simulate incoming messages
-    setInterval(() => {
-      addMessage(`Message ${Date.now()}`);
-    }, 2000);
-  </script>
-</body>
-</html>
-```
-
-### Live Log Viewer
-
-```javascript
-import StickToBottom from 'stick-to-bottom';
-
-class LogViewer {
-  constructor(containerId) {
-    this.container = document.getElementById(containerId);
-    this.logContainer = document.createElement('div');
-    this.container.appendChild(this.logContainer);
-    
-    this.stickToBottom = new StickToBottom(this.container, this.logContainer, {
-      resize: 'instant',  // Instant scroll for logs
-      initial: true
-    });
-    
-    this.setupControls();
-  }
-  
-  setupControls() {
-    // Auto-scroll toggle
-    const toggle = document.createElement('button');
-    toggle.textContent = 'Auto-scroll: ON';
-    
-    this.stickToBottom.on('bottomChange', (isAtBottom) => {
-      toggle.textContent = `Auto-scroll: ${isAtBottom ? 'ON' : 'OFF'}`;
-    });
-    
-    toggle.addEventListener('click', () => {
-      this.stickToBottom.scrollToBottom();
-    });
-    
-    this.container.parentElement.appendChild(toggle);
-  }
-  
-  addLog(level, message) {
-    const logEntry = document.createElement('div');
-    logEntry.className = `log-entry log-${level}`;
-    logEntry.innerHTML = `
-      <span class="timestamp">${new Date().toLocaleTimeString()}</span>
-      <span class="level">[${level.toUpperCase()}]</span>
-      <span class="message">${message}</span>
-    `;
-    
-    this.logContainer.appendChild(logEntry);
-    
-    // Keep only last 1000 entries
-    while (this.logContainer.children.length > 1000) {
-      this.logContainer.removeChild(this.logContainer.firstChild);
-    }
-  }
-}
-
-// Usage
-const logger = new LogViewer('log-container');
-logger.addLog('info', 'Application started');
-logger.addLog('error', 'Connection failed');
 ```
 
 ## 📚 API Reference
@@ -430,6 +274,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Inspired by the React `useStickToBottom` hook
+- Inspired by the React `useStickToBottom` hook from Stackblitz Labs
 - Built for modern web applications that need smooth scrolling behavior
 - Designed with chat applications and live content in mind
