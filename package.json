@@ -4,6 +4,9 @@
   "description": "A lightweight vanilla JavaScript library that automatically sticks to the bottom of a container and smoothly animates content while new items are added",
   "author": "Coby Benveniste",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {},
   "files": [
     "src",
