@@ -1,6 +1,6 @@
 {
   "name": "@probably-not/stick-to-bottom",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A lightweight vanilla JavaScript library that automatically sticks to the bottom of a container and smoothly animates content while new items are added",
   "author": "Coby Benveniste",
   "license": "MIT",
