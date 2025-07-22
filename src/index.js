@@ -410,7 +410,7 @@ class StickToBottom {
     }
 
     const scrollTop = this.scrollTop;
-    const { ignoreScrollToTop, isAtBottom } = this.state;
+    const { ignoreScrollToTop } = this.state;
     let { lastScrollTop = scrollTop } = this.state;
 
     this.state.lastScrollTop = scrollTop;
@@ -438,6 +438,7 @@ class StickToBottom {
 
       const isScrollingDown = scrollTop > lastScrollTop;
       const isScrollingUp = scrollTop < lastScrollTop;
+      const isAtBottom = this.scrollDifference <= 0;
 
       if (this.state.animation?.ignoreEscapes) {
         this.scrollTop = lastScrollTop;
