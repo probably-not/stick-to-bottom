@@ -410,7 +410,7 @@ class StickToBottom {
     }
 
     const scrollTop = this.scrollTop;
-    const { ignoreScrollToTop, isAtBottom } = this.state;
+    const { ignoreScrollToTop, isNearBottom } = this.state;
     let { lastScrollTop = scrollTop } = this.state;
 
     this.state.lastScrollTop = scrollTop;
@@ -444,13 +444,14 @@ class StickToBottom {
         return;
       }
 
-      if (isScrollingUp && !isAtBottom) {
+      if (isScrollingUp && !isNearBottom) {
         this.setEscapedFromLock(true);
         this.setIsAtBottom(false);
       }
 
-      if (isScrollingDown) {
+      if (isScrollingDown && isNearBottom) {
         this.setEscapedFromLock(false);
+        this.setIsAtBottom(true);
       }
 
       if (!this.state.escapedFromLock && this.isNearBottom) {
@@ -474,6 +475,7 @@ class StickToBottom {
     if (
       element === this.scrollElement &&
       event.deltaY < 0 &&
+      !this.state.isNearBottom &&
       this.scrollElement.scrollHeight > this.scrollElement.clientHeight &&
       !this.state.animation?.ignoreEscapes
     ) {
