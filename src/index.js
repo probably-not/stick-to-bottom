@@ -102,7 +102,7 @@ class StickToBottom {
     this.contentElement = contentElement;
     this.options = {
       ...DEFAULT_SPRING_ANIMATION,
-      useStrictCheck: false,
+      useStrictCheck: true,
       ...options,
     };
     
@@ -424,6 +424,7 @@ class StickToBottom {
 
     const scrollTop = this.scrollTop;
     const { ignoreScrollToTop } = this.state;
+    const shouldStickToBottom = this.shouldStickToBottom;
     let { lastScrollTop = scrollTop } = this.state;
 
     this.state.lastScrollTop = scrollTop;
@@ -451,7 +452,6 @@ class StickToBottom {
 
       const isScrollingDown = scrollTop > lastScrollTop;
       const isScrollingUp = scrollTop < lastScrollTop;
-      const shouldStickToBottom = this.shouldStickToBottom;
 
       if (this.state.animation?.ignoreEscapes) {
         this.scrollTop = lastScrollTop;
@@ -463,9 +463,8 @@ class StickToBottom {
         this.setIsAtBottom(false);
       }
 
-      if (isScrollingDown && shouldStickToBottom) {
+      if (isScrollingDown) {
         this.setEscapedFromLock(false);
-        this.setIsAtBottom(true);
       }
 
       if (!this.state.escapedFromLock && this.isNearBottom) {
