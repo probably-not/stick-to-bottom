@@ -93,13 +93,18 @@ function mergeAnimations(...animations) {
  * @param {HTMLElement} scrollElement - The scrollable container element
  * @param {HTMLElement} contentElement - The content element to observe for size changes
  * @param {Object} options - Configuration options
+ * @param {boolean} options.useStrictCheck - If true. uses isAtBottom instead of isNearBottom when determining if the user is at the bottom
  */
 class StickToBottom {
   constructor(scrollElement, contentElement, options = {}) {
     // Initialize properties
     this.scrollElement = scrollElement;
     this.contentElement = contentElement;
-    this.options = { ...DEFAULT_SPRING_ANIMATION, ...options };
+    this.options = {
+      ...DEFAULT_SPRING_ANIMATION,
+      useStrictCheck: false,
+      ...options,
+    };
     
     // Event emitter setup
     this.listeners = new Map();
@@ -226,6 +231,14 @@ class StickToBottom {
 
   get isNearBottom() {
     return this.scrollDifference <= STICK_TO_BOTTOM_OFFSET_PX;
+  }
+
+  get isAtBottom() {
+    return this.scrollDifference <= 0;
+  }
+
+  get shouldStickToBottom() {
+    return this.options.useStrictCheck ? this.isAtBottom : this.isNearBottom;
   }
 
   // State setters with events
@@ -410,7 +423,7 @@ class StickToBottom {
     }
 
     const scrollTop = this.scrollTop;
-    const { ignoreScrollToTop, isNearBottom } = this.state;
+    const { ignoreScrollToTop } = this.state;
     let { lastScrollTop = scrollTop } = this.state;
 
     this.state.lastScrollTop = scrollTop;
@@ -438,18 +451,19 @@ class StickToBottom {
 
       const isScrollingDown = scrollTop > lastScrollTop;
       const isScrollingUp = scrollTop < lastScrollTop;
+      const shouldStickToBottom = this.shouldStickToBottom;
 
       if (this.state.animation?.ignoreEscapes) {
         this.scrollTop = lastScrollTop;
         return;
       }
 
-      if (isScrollingUp && !isNearBottom) {
+      if (isScrollingUp && !shouldStickToBottom) {
         this.setEscapedFromLock(true);
         this.setIsAtBottom(false);
       }
 
-      if (isScrollingDown && isNearBottom) {
+      if (isScrollingDown && shouldStickToBottom) {
         this.setEscapedFromLock(false);
         this.setIsAtBottom(true);
       }
@@ -475,7 +489,7 @@ class StickToBottom {
     if (
       element === this.scrollElement &&
       event.deltaY < 0 &&
-      !this.state.isNearBottom &&
+      !this.shouldStickToBottom &&
       this.scrollElement.scrollHeight > this.scrollElement.clientHeight &&
       !this.state.animation?.ignoreEscapes
     ) {
