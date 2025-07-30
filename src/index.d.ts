@@ -16,6 +16,8 @@ interface StickToBottomOptions extends SpringAnimation {
   initial?: boolean | SpringAnimation | "instant";
   /** Animation configuration for resize events */
   resize?: SpringAnimation | "instant";
+  /** If true. uses isAtBottom instead of isNearBottom when determining if the user is at the bottom */
+  useStrictCheck?: boolean;
   /** Custom target scroll top calculation function */
   targetScrollTop?: (targetScrollTop: number, elements: {
     scrollElement: HTMLElement;
