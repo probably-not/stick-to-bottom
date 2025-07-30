@@ -93,13 +93,18 @@ function mergeAnimations(...animations) {
  * @param {HTMLElement} scrollElement - The scrollable container element
  * @param {HTMLElement} contentElement - The content element to observe for size changes
  * @param {Object} options - Configuration options
+ * @param {boolean} options.useStrictCheck - If true. uses isAtBottom instead of isNearBottom when determining if the user is at the bottom
  */
 class StickToBottom {
   constructor(scrollElement, contentElement, options = {}) {
     // Initialize properties
     this.scrollElement = scrollElement;
     this.contentElement = contentElement;
-    this.options = { ...DEFAULT_SPRING_ANIMATION, ...options };
+    this.options = {
+      ...DEFAULT_SPRING_ANIMATION,
+      useStrictCheck: true,
+      ...options,
+    };
     
     // Event emitter setup
     this.listeners = new Map();
@@ -226,6 +231,14 @@ class StickToBottom {
 
   get isNearBottom() {
     return this.scrollDifference <= STICK_TO_BOTTOM_OFFSET_PX;
+  }
+
+  get isAtBottom() {
+    return this.scrollDifference <= 0;
+  }
+
+  get shouldStickToBottom() {
+    return this.options.useStrictCheck ? this.isAtBottom : this.isNearBottom;
   }
 
   // State setters with events
@@ -410,7 +423,8 @@ class StickToBottom {
     }
 
     const scrollTop = this.scrollTop;
-    const { ignoreScrollToTop, isAtBottom } = this.state;
+    const { ignoreScrollToTop } = this.state;
+    const shouldStickToBottom = this.shouldStickToBottom;
     let { lastScrollTop = scrollTop } = this.state;
 
     this.state.lastScrollTop = scrollTop;
@@ -444,7 +458,7 @@ class StickToBottom {
         return;
       }
 
-      if (isScrollingUp && !isAtBottom) {
+      if (isScrollingUp && !shouldStickToBottom) {
         this.setEscapedFromLock(true);
         this.setIsAtBottom(false);
       }
@@ -474,6 +488,7 @@ class StickToBottom {
     if (
       element === this.scrollElement &&
       event.deltaY < 0 &&
+      !this.shouldStickToBottom &&
       this.scrollElement.scrollHeight > this.scrollElement.clientHeight &&
       !this.state.animation?.ignoreEscapes
     ) {

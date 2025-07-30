@@ -329,6 +329,7 @@
                         <div class="control-row">
                             <button id="addMessage1">Add Message</button>
                             <button id="testScroll1" class="primary">Test Scroll</button>
+                            <button id="toggleStrict1">Toggle Strict</button>
                         </div>
                     </div>
                 </div>
@@ -399,6 +400,11 @@
                 <div class="status-item" id="statusNear">
                     <h4>Near Bottom</h4>
                     <div class="status-value" id="nearValue">-</div>
+                </div>
+
+                <div class="status-item" id="statusStrict">
+                    <h4>Strict Mode</h4>
+                    <div class="status-value" id="strictValue">-</div>
                 </div>
                 
                 <div class="status-item" id="statusScroll">
@@ -491,6 +497,12 @@
                 }
             });
         });
+
+        document.getElementById('toggleStrict1').addEventListener('click', () => {
+            stickToBottom1.options.useStrictCheck = !stickToBottom1.options.useStrictCheck;
+            document.getElementById('toggleStrict1').textContent = 
+                stickToBottom1.options.useStrictCheck ? 'Disable Strict' : 'Enable Strict';
+        });
         
         // Demo 2: Behavior Testing
         const animationType2 = document.getElementById('animationType2');
@@ -576,6 +588,7 @@
             document.getElementById('bottomValue').textContent = state.isAtBottom ? 'YES' : 'NO';
             document.getElementById('escapedValue').textContent = state.escapedFromLock ? 'YES' : 'NO';
             document.getElementById('nearValue').textContent = state.isNearBottom ? 'YES' : 'NO';
+            document.getElementById('strictValue').textContent = stickToBottom1.options.useStrictCheck ? 'ON' : 'OFF';
             document.getElementById('scrollValue').textContent = Math.round(state.scrollTop);
             document.getElementById('targetValue').textContent = Math.round(state.targetScrollTop);
             document.getElementById('diffValue').textContent = Math.round(stickToBottom1.scrollDifference);
@@ -584,6 +597,7 @@
             document.getElementById('statusBottom').className = `status-item ${state.isAtBottom ? 'active' : 'inactive'}`;
             document.getElementById('statusEscaped').className = `status-item ${state.escapedFromLock ? 'active' : 'inactive'}`;
             document.getElementById('statusNear').className = `status-item ${state.isNearBottom ? 'active' : 'inactive'}`;
+            document.getElementById('statusStrict').className = `status-item ${stickToBottom1.options.useStrictCheck ? 'active' : 'inactive'}`;
             
             // Update performance chart
             performanceData.push({
