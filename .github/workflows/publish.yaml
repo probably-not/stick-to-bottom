@@ -1,0 +1,32 @@
+name: "Publish To NPM"
+
+on:
+  push:
+    branches-ignore:
+      - "**"
+    tags:
+      - v*
+
+concurrency:
+  group: publish-${{ github.event.repository.name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  id-token: write # Required for OIDC
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.5.1"
+          registry-url: "https://registry.npmjs.org"
+      - name: Update npm
+        run: npm install -g npm@latest
+      - run: npm ci
+      - run: npm run build --if-present
+      - run: npm test --if-present
+      - run: npm publish
