@@ -7,14 +7,18 @@
   "publishConfig": {
     "access": "public"
   },
-  "scripts": {},
+  "scripts": {
+    "build:types": "npx tsc",
+    "prepublishOnly": "npm run build:types"
+  },
   "files": [
-    "src",
+    "src/index.js",
+    "dist/index.d.ts",
     "README.md",
     "LICENSE"
   ],
   "main": "src/index.js",
-  "types": "src/index.d.ts",
+  "types": "dist/index.d.ts",
   "keywords": [
     "scroll",
     "sticky",
@@ -42,5 +46,8 @@
     "> 1%",
     "last 2 versions",
     "not dead"
-  ]
+  ],
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
 }
