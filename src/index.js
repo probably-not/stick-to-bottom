@@ -307,6 +307,11 @@ class StickToBottom {
    * @param {Partial<StickToBottomState>} data
    */
   /**
+   * @overload
+   * @param {string} event
+   * @param {any} [data]
+   */
+  /**
    * @param {string} event
    * @param {any} [data]
    */
