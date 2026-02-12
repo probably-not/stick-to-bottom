@@ -1,18 +1,80 @@
 /**
  * Vanilla JavaScript implementation of StickToBottom
  * Ported from React useStickToBottom hook
- * 
+ *
  * This class provides stick-to-bottom behavior for scrollable containers,
  * automatically scrolling to the bottom when new content is added while
  * preserving user scroll position when they scroll up.
  */
+
+/**
+ * @typedef {Object} SpringAnimation
+ * @property {number} damping - A value from 0 to 1, on how much to damp the animation
+ * @property {number} stiffness - The stiffness of how fast/slow the animation gets up to speed
+ * @property {number} mass - The inertial mass associated with the animation
+ */
+
+/**
+ * @typedef {Object} StickToBottomOptions
+ * @property {number} damping
+ * @property {number} stiffness
+ * @property {number} mass
+ * @property {boolean | SpringAnimation | "instant"} [initial] - Whether/how to scroll to bottom on init
+ * @property {SpringAnimation | "instant"} [resize] - Animation configuration for resize events
+ * @property {boolean} [useStrictCheck] - If true, uses isAtBottom instead of isNearBottom
+ * @property {(targetScrollTop: number, elements: {scrollElement: HTMLElement, contentElement: HTMLElement}) => number} [targetScrollTop] - Custom target calculation
+ */
+
+/**
+ * @typedef {Object} ScrollOptions
+ * @property {SpringAnimation | "instant"} [animation] - Animation configuration
+ * @property {number | boolean} [wait] - Wait time before scrolling in ms, or true to reuse existing
+ * @property {number | Promise<any>} [duration] - Animation duration in ms or a Promise
+ * @property {boolean} [preserveScrollPosition] - Whether to preserve current scroll position
+ * @property {boolean} [ignoreEscapes] - Whether to ignore escape detection during animation
+ */
+
+/**
+ * @typedef {Object} AnimationState
+ * @property {SpringAnimation | "instant"} behavior
+ * @property {Promise<boolean>} promise
+ * @property {boolean} ignoreEscapes
+ */
+
+/**
+ * @typedef {Object} StickToBottomState
+ * @property {number} scrollTop
+ * @property {number | undefined} lastScrollTop
+ * @property {number | undefined} ignoreScrollToTop
+ * @property {number} targetScrollTop
+ * @property {number} calculatedTargetScrollTop
+ * @property {number} scrollDifference
+ * @property {number} resizeDifference
+ * @property {AnimationState | undefined | null} animation
+ * @property {number | undefined} lastTick
+ * @property {number} velocity
+ * @property {number} accumulated
+ * @property {boolean} escapedFromLock
+ * @property {boolean} isAtBottom
+ * @property {boolean} isNearBottom
+ * @property {ResizeObserver | undefined} resizeObserver
+ */
+
+/**
+ * @template [T=any]
+ * @callback EventHandler
+ * @param {T} data
+ * @returns {void}
+ */
+
+/** @typedef {() => void} UnsubscribeFunction */
 
 // Constants
 const STICK_TO_BOTTOM_OFFSET_PX = 70;
 const SIXTY_FPS_INTERVAL_MS = 1000 / 60;
 const RETAIN_ANIMATION_DURATION_MS = 350;
 
-// Default spring animation configuration
+/** @type {SpringAnimation} */
 const DEFAULT_SPRING_ANIMATION = {
   /**
    * A value from 0 to 1, on how much to damp the animation.
@@ -56,6 +118,10 @@ globalThis.document?.addEventListener("click", () => {
 // Animation caching system
 const animationCache = new Map();
 
+/**
+ * @param {...(SpringAnimation | "instant" | boolean | undefined)} animations
+ * @returns {SpringAnimation | "instant"}
+ */
 function mergeAnimations(...animations) {
   const result = { ...DEFAULT_SPRING_ANIMATION };
   let instant = false;
@@ -88,28 +154,33 @@ function mergeAnimations(...animations) {
 
 /**
  * StickToBottom class - Vanilla JavaScript implementation
- * 
- * @class StickToBottom
- * @param {HTMLElement} scrollElement - The scrollable container element
- * @param {HTMLElement} contentElement - The content element to observe for size changes
- * @param {Object} options - Configuration options
- * @param {boolean} options.useStrictCheck - If true. uses isAtBottom instead of isNearBottom when determining if the user is at the bottom
+ *
+ * Provides stick-to-bottom behavior for scrollable containers,
+ * automatically scrolling to the bottom when new content is added while
+ * preserving user scroll position when they scroll up.
  */
 class StickToBottom {
+  /**
+   * @param {HTMLElement | null} scrollElement - The scrollable container element
+   * @param {HTMLElement | null} contentElement - The content element to observe for size changes
+   * @param {Partial<StickToBottomOptions>} [options]
+   */
   constructor(scrollElement, contentElement, options = {}) {
-    // Initialize properties
+    /** @type {HTMLElement | null} */
     this.scrollElement = scrollElement;
+    /** @type {HTMLElement | null} */
     this.contentElement = contentElement;
+    /** @type {StickToBottomOptions} */
     this.options = {
       ...DEFAULT_SPRING_ANIMATION,
       useStrictCheck: true,
       ...options,
     };
-    
-    // Event emitter setup
+
+    /** @type {Map<string, Set<EventHandler>>} */
     this.listeners = new Map();
-    
-    // Initialize state
+
+    /** @type {StickToBottomState} */
     this.state = {
       scrollTop: 0,
       lastScrollTop: undefined,
@@ -127,19 +198,53 @@ class StickToBottom {
       isNearBottom: false,
       resizeObserver: undefined,
     };
-    
-    // Cache for calculated values
+
+    /** @type {{ targetScrollTop: number, calculatedScrollTop: number } | undefined} */
     this.lastCalculation = undefined;
-    
+
     // Bind methods
     this.handleScroll = this.handleScroll.bind(this);
     this.handleWheel = this.handleWheel.bind(this);
-    
+
     // Initialize
     this.init();
   }
 
-  // Event emitter methods
+  /**
+   * @overload
+   * @param {'bottomChange'} event
+   * @param {(data: boolean) => void} handler
+   * @returns {UnsubscribeFunction}
+   */
+  /**
+   * @overload
+   * @param {'escapeChange'} event
+   * @param {(data: boolean) => void} handler
+   * @returns {UnsubscribeFunction}
+   */
+  /**
+   * @overload
+   * @param {'nearBottomChange'} event
+   * @param {(data: boolean) => void} handler
+   * @returns {UnsubscribeFunction}
+   */
+  /**
+   * @overload
+   * @param {'stateChange'} event
+   * @param {(data: Partial<StickToBottomState>) => void} handler
+   * @returns {UnsubscribeFunction}
+   */
+  /**
+   * @overload
+   * @param {string} event
+   * @param {EventHandler} handler
+   * @returns {UnsubscribeFunction}
+   */
+  /**
+   * @param {string} event
+   * @param {EventHandler} handler
+   * @returns {UnsubscribeFunction}
+   */
   on(event, handler) {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
@@ -148,12 +253,65 @@ class StickToBottom {
     return () => this.off(event, handler);
   }
 
+  /**
+   * @overload
+   * @param {'bottomChange'} event
+   * @param {(data: boolean) => void} handler
+   */
+  /**
+   * @overload
+   * @param {'escapeChange'} event
+   * @param {(data: boolean) => void} handler
+   */
+  /**
+   * @overload
+   * @param {'nearBottomChange'} event
+   * @param {(data: boolean) => void} handler
+   */
+  /**
+   * @overload
+   * @param {'stateChange'} event
+   * @param {(data: Partial<StickToBottomState>) => void} handler
+   */
+  /**
+   * @overload
+   * @param {string} event
+   * @param {EventHandler} handler
+   */
+  /**
+   * @param {string} event
+   * @param {EventHandler} handler
+   */
   off(event, handler) {
     this.listeners.get(event)?.delete(handler);
   }
 
+  /**
+   * @overload
+   * @param {'bottomChange'} event
+   * @param {boolean} data
+   */
+  /**
+   * @overload
+   * @param {'escapeChange'} event
+   * @param {boolean} data
+   */
+  /**
+   * @overload
+   * @param {'nearBottomChange'} event
+   * @param {boolean} data
+   */
+  /**
+   * @overload
+   * @param {'stateChange'} event
+   * @param {Partial<StickToBottomState>} data
+   */
+  /**
+   * @param {string} event
+   * @param {any} [data]
+   */
   emit(event, data) {
-    this.listeners.get(event)?.forEach(handler => handler(data));
+    this.listeners.get(event)?.forEach((handler) => handler(data));
   }
 
   // State getters
@@ -171,10 +329,10 @@ class StickToBottom {
   get targetScrollTop() {
     if (!this.scrollElement || !this.contentElement) {
       if (!this.scrollElement) {
-        console.warn('StickToBottom: scrollElement not set');
+        console.warn("StickToBottom: scrollElement not set");
       }
       if (!this.contentElement) {
-        console.warn('StickToBottom: contentElement not set');
+        console.warn("StickToBottom: contentElement not set");
       }
       return 0;
     }
@@ -187,10 +345,10 @@ class StickToBottom {
   get calculatedTargetScrollTop() {
     if (!this.scrollElement || !this.contentElement) {
       if (!this.scrollElement) {
-        console.warn('StickToBottom: scrollElement not set');
+        console.warn("StickToBottom: scrollElement not set");
       }
       if (!this.contentElement) {
-        console.warn('StickToBottom: contentElement not set');
+        console.warn("StickToBottom: contentElement not set");
       }
       return 0;
     }
@@ -241,31 +399,33 @@ class StickToBottom {
     return this.options.useStrictCheck ? this.isAtBottom : this.isNearBottom;
   }
 
-  // State setters with events
+  /** @param {boolean} isAtBottom */
   setIsAtBottom(isAtBottom) {
     const changed = this.state.isAtBottom !== isAtBottom;
     this.state.isAtBottom = isAtBottom;
     if (changed) {
-      this.emit('bottomChange', isAtBottom);
-      this.emit('stateChange', { isAtBottom });
+      this.emit("bottomChange", isAtBottom);
+      this.emit("stateChange", { isAtBottom });
     }
   }
 
+  /** @param {boolean} escapedFromLock */
   setEscapedFromLock(escapedFromLock) {
     const changed = this.state.escapedFromLock !== escapedFromLock;
     this.state.escapedFromLock = escapedFromLock;
     if (changed) {
-      this.emit('escapeChange', escapedFromLock);
-      this.emit('stateChange', { escapedFromLock });
+      this.emit("escapeChange", escapedFromLock);
+      this.emit("stateChange", { escapedFromLock });
     }
   }
 
+  /** @param {boolean} isNearBottom */
   setIsNearBottom(isNearBottom) {
     const changed = this.state.isNearBottom !== isNearBottom;
     this.state.isNearBottom = isNearBottom;
     if (changed) {
-      this.emit('nearBottomChange', isNearBottom);
-      this.emit('stateChange', { isNearBottom });
+      this.emit("nearBottomChange", isNearBottom);
+      this.emit("stateChange", { isNearBottom });
     }
   }
 
@@ -292,39 +452,37 @@ class StickToBottom {
 
   /**
    * Scrolls to the bottom of the container with animation
-   * @param {Object|string} scrollOptions - Scroll options or animation type
-   * @param {string|Object} scrollOptions.animation - Animation configuration
-   * @param {number} scrollOptions.wait - Wait time before scrolling
-   * @param {number|Promise} scrollOptions.duration - Animation duration
-   * @param {boolean} scrollOptions.preserveScrollPosition - Whether to preserve scroll position
-   * @param {boolean} scrollOptions.ignoreEscapes - Whether to ignore escape detection
-   * @returns {Promise<boolean>} - Resolves when scroll completes
+   * @param {ScrollOptions | string} [scrollOptions]
+   * @returns {Promise<boolean>}
    */
   scrollToBottom(scrollOptions = {}) {
-    if (typeof scrollOptions === "string") {
-      scrollOptions = { animation: scrollOptions };
-    }
+    /** @type {ScrollOptions} */
+    const opts =
+      typeof scrollOptions === "string"
+        ? {
+            animation: /** @type {SpringAnimation | "instant"} */ (
+              scrollOptions
+            ),
+          }
+        : scrollOptions;
 
-    if (!scrollOptions.preserveScrollPosition) {
+    if (!opts.preserveScrollPosition) {
       this.setIsAtBottom(true);
     }
 
-    const waitElapsed = Date.now() + (Number(scrollOptions.wait) || 0);
-    const behavior = mergeAnimations(
-      this.options,
-      scrollOptions.animation,
-    );
-    const { ignoreEscapes = false } = scrollOptions;
+    const waitElapsed = Date.now() + (Number(opts.wait) || 0);
+    const behavior = mergeAnimations(this.options, opts.animation);
+    const { ignoreEscapes = false } = opts;
 
     let durationElapsed;
     let startTarget = this.calculatedTargetScrollTop;
 
-    if (scrollOptions.duration instanceof Promise) {
-      scrollOptions.duration.finally(() => {
+    if (opts.duration instanceof Promise) {
+      opts.duration.finally(() => {
         durationElapsed = Date.now();
       });
     } else {
-      durationElapsed = waitElapsed + (scrollOptions.duration ?? 0);
+      durationElapsed = waitElapsed + (opts.duration ?? 0);
     }
 
     const next = async () => {
@@ -336,7 +494,8 @@ class StickToBottom {
 
         const scrollTop = this.scrollTop;
         const tick = performance.now();
-        const tickDelta = (tick - (this.state.lastTick ?? tick)) / SIXTY_FPS_INTERVAL_MS;
+        const tickDelta =
+          (tick - (this.state.lastTick ?? tick)) / SIXTY_FPS_INTERVAL_MS;
         this.state.animation ||= { behavior, promise, ignoreEscapes };
 
         if (this.state.animation.behavior === behavior) {
@@ -358,8 +517,10 @@ class StickToBottom {
               return next();
             }
 
-            this.state.velocity = (behavior.damping * this.state.velocity +
-              behavior.stiffness * this.scrollDifference) / behavior.mass;
+            this.state.velocity =
+              (behavior.damping * this.state.velocity +
+                behavior.stiffness * this.scrollDifference) /
+              behavior.mass;
             this.state.accumulated += this.state.velocity * tickDelta;
             this.scrollTop += this.state.accumulated;
 
@@ -381,10 +542,7 @@ class StickToBottom {
         // If we're still below the target, queue up another scroll
         if (this.scrollTop < this.calculatedTargetScrollTop) {
           return this.scrollToBottom({
-            animation: mergeAnimations(
-              this.options,
-              this.options.resize,
-            ),
+            animation: mergeAnimations(this.options, this.options.resize),
             ignoreEscapes,
             duration: Math.max(0, durationElapsed - Date.now()) || undefined,
           });
@@ -405,7 +563,7 @@ class StickToBottom {
       });
     };
 
-    if (scrollOptions.wait !== true) {
+    if (opts.wait !== true) {
       this.state.animation = undefined;
     }
 
@@ -416,7 +574,7 @@ class StickToBottom {
     return next();
   }
 
-  // Event handlers
+  /** @param {Event} event */
   handleScroll(event) {
     if (event.target !== this.scrollElement) {
       return;
@@ -473,8 +631,10 @@ class StickToBottom {
     }, 1);
   }
 
+  /** @param {WheelEvent} event */
   handleWheel(event) {
-    let element = event.target;
+    /** @type {Element | null} */
+    let element = /** @type {Element} */ (event.target);
 
     while (!["scroll", "auto"].includes(getComputedStyle(element).overflow)) {
       if (!element.parentElement) {
@@ -524,9 +684,7 @@ class StickToBottom {
         // If it's a positive resize, scroll to the bottom when we're already at the bottom
         const animation = mergeAnimations(
           this.options,
-          previousHeight
-            ? this.options.resize
-            : this.options.initial,
+          previousHeight ? this.options.resize : this.options.initial,
         );
 
         this.scrollToBottom({
@@ -563,13 +721,13 @@ class StickToBottom {
 
   /**
    * Sets the scroll element and updates event listeners
-   * @param {HTMLElement} element - The new scroll element
+   * @param {HTMLElement | null} element
    */
   setScrollElement(element) {
     // Remove old listeners
     if (this.scrollElement) {
-      this.scrollElement.removeEventListener('scroll', this.handleScroll);
-      this.scrollElement.removeEventListener('wheel', this.handleWheel);
+      this.scrollElement.removeEventListener("scroll", this.handleScroll);
+      this.scrollElement.removeEventListener("wheel", this.handleWheel);
     }
 
     // Set new element
@@ -577,14 +735,14 @@ class StickToBottom {
 
     // Add new listeners
     if (element) {
-      element.addEventListener('scroll', this.handleScroll, { passive: true });
-      element.addEventListener('wheel', this.handleWheel, { passive: true });
+      element.addEventListener("scroll", this.handleScroll, { passive: true });
+      element.addEventListener("wheel", this.handleWheel, { passive: true });
     }
   }
 
   /**
    * Sets the content element and updates resize observer
-   * @param {HTMLElement} element - The new content element
+   * @param {HTMLElement | null} element
    */
   setContentElement(element) {
     // Disconnect old observer
@@ -604,8 +762,12 @@ class StickToBottom {
   init() {
     // Setup event listeners
     if (this.scrollElement) {
-      this.scrollElement.addEventListener('scroll', this.handleScroll, { passive: true });
-      this.scrollElement.addEventListener('wheel', this.handleWheel, { passive: true });
+      this.scrollElement.addEventListener("scroll", this.handleScroll, {
+        passive: true,
+      });
+      this.scrollElement.addEventListener("wheel", this.handleWheel, {
+        passive: true,
+      });
     }
 
     // Setup ResizeObserver
@@ -613,7 +775,11 @@ class StickToBottom {
 
     // Initial scroll if specified
     if (this.options.initial !== false) {
-      this.scrollToBottom({ animation: this.options.initial });
+      const initialAnimation =
+        typeof this.options.initial === "boolean"
+          ? undefined
+          : this.options.initial;
+      this.scrollToBottom({ animation: initialAnimation });
     }
   }
 
@@ -623,8 +789,8 @@ class StickToBottom {
    */
   destroy() {
     // Remove event listeners
-    this.scrollElement?.removeEventListener('scroll', this.handleScroll);
-    this.scrollElement?.removeEventListener('wheel', this.handleWheel);
+    this.scrollElement?.removeEventListener("scroll", this.handleScroll);
+    this.scrollElement?.removeEventListener("wheel", this.handleWheel);
 
     // Disconnect ResizeObserver
     this.state.resizeObserver?.disconnect();
@@ -638,11 +804,14 @@ class StickToBottom {
 }
 
 // Export for use
-if (typeof module !== 'undefined' && module.exports) {
+// @ts-ignore
+if (typeof module !== "undefined" && module.exports) {
+  // @ts-ignore
   module.exports = StickToBottom;
 }
 
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
+  // @ts-ignore
   window.StickToBottom = StickToBottom;
 }
 
